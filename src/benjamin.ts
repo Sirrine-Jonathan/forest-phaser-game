@@ -10,6 +10,7 @@ export class Benjamin {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
+
   preload() {
     this.scene.load.spritesheet("idle_ss", "character/idle.png", {
       frameWidth: 126,
@@ -89,36 +90,54 @@ export class Benjamin {
         this.chargeStart = null;
       }
       if (cursors.space.isDown) {
-        this.guy.setFlipX(this.isForward);
-        this.guy.setVelocityX(0);
-        this.guy.anims.play("charge", true);
-        if (this.chargeStart === null || this.isAttacking) {
-          this.chargeStart = time;
-        }
-        const duration = time - this.chargeStart;
-        if (duration >= CHARGE_THRESHOLD && !this.isAttacking) {
-          this.isAttacking = true;
-          this.guy.setFlipX(this.isForward);
-          this.guy.anims
-            .startAnimation("attack")
-            .on("animationcomplete", () => {
-              this.isAttacking = false;
-            });
-        }
+        this.charge(time);
       } else if (cursors.left.isDown) {
-        this.isForward = true;
-        this.guy.setFlipX(this.isForward);
-        this.guy.setVelocityX(-160);
-        this.guy.anims.play("run", true);
+        this.moveLeft();
       } else if (cursors.right.isDown) {
-        this.isForward = false;
-        this.guy.setFlipX(this.isForward);
-        this.guy.setVelocityX(160);
-        this.guy.anims.play("run", true);
+        this.moveRight();
       } else {
-        this.guy.setVelocityX(0);
-        this.guy.anims.play("idle", true);
+        this.idle();
       }
     }
+  }
+
+  attack() {
+    this.isAttacking = true;
+    this.guy.setFlipX(this.isForward);
+    this.guy.anims.startAnimation("attack").on("animationcomplete", () => {
+      this.isAttacking = false;
+    });
+  }
+
+  charge(time: number) {
+    this.guy.setFlipX(this.isForward);
+    this.guy.setVelocityX(0);
+    this.guy.anims.play("charge", true);
+    if (this.chargeStart === null || this.isAttacking) {
+      this.chargeStart = time;
+    }
+    const duration = time - this.chargeStart;
+    if (duration >= CHARGE_THRESHOLD && !this.isAttacking) {
+      this.attack();
+    }
+  }
+
+  moveLeft() {
+    this.isForward = true;
+    this.guy.setFlipX(this.isForward);
+    this.guy.setVelocityX(-160);
+    this.guy.anims.play("run", true);
+  }
+
+  moveRight() {
+    this.isForward = false;
+    this.guy.setFlipX(this.isForward);
+    this.guy.setVelocityX(160);
+    this.guy.anims.play("run", true);
+  }
+
+  idle() {
+    this.guy.setVelocityX(0);
+    this.guy.anims.play("idle", true);
   }
 }
