@@ -1,10 +1,12 @@
-const CHARGE_THRESHOLD = 700;
+const CHARGE_THRESHOLD = 300;
 
-export class Benjamin {
+export class Rec {
   scene!: Phaser.Scene;
   guy!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-  isForward = true;
+  isForward = false;
   isAttacking = false;
+  isStartingCharge = false;
+  isCharging = false;
   chargeStart: number | null = null;
 
   constructor(scene: Phaser.Scene) {
@@ -22,12 +24,31 @@ export class Benjamin {
       frameHeight: 39,
     });
 
+    this.scene.load.spritesheet(
+      "start_charge_ss",
+      "character/start_charge.png",
+      {
+        frameWidth: 126,
+        frameHeight: 39,
+      }
+    );
+
     this.scene.load.spritesheet("charge_ss", "character/charge.png", {
       frameWidth: 126,
       frameHeight: 39,
     });
 
     this.scene.load.spritesheet("attack_ss", "character/attack.png", {
+      frameWidth: 126,
+      frameHeight: 39,
+    });
+
+    this.scene.load.spritesheet("death_ss", "character/death.png", {
+      frameWidth: 126,
+      frameHeight: 39,
+    });
+
+    this.scene.load.spritesheet("hit_ss", "character/hit.png", {
       frameWidth: 126,
       frameHeight: 39,
     });
@@ -41,13 +62,14 @@ export class Benjamin {
     this.guy.setScale(3);
     this.guy.setBodySize(20, 30, true);
 
+    const FRAME_RATE = 10;
     this.scene.anims.create({
       key: "idle",
       frames: this.scene.anims.generateFrameNumbers("idle_ss", {
         start: 0,
         end: 4,
       }),
-      frameRate: 5,
+      frameRate: FRAME_RATE / 2,
       repeat: -1,
     });
     this.scene.anims.create({
@@ -56,8 +78,17 @@ export class Benjamin {
         start: 0,
         end: 7,
       }),
-      frameRate: 10,
+      frameRate: FRAME_RATE,
       repeat: -1,
+    });
+    this.scene.anims.create({
+      key: "start_charge",
+      frames: this.scene.anims.generateFrameNumbers("start_charge_ss", {
+        start: 0,
+        end: 1,
+      }),
+      frameRate: FRAME_RATE,
+      repeat: 0,
     });
     this.scene.anims.create({
       key: "charge",
@@ -65,7 +96,7 @@ export class Benjamin {
         start: 0,
         end: 3,
       }),
-      frameRate: 10,
+      frameRate: FRAME_RATE,
       repeat: -1,
     });
     this.scene.anims.create({
@@ -74,7 +105,25 @@ export class Benjamin {
         start: 0,
         end: 7,
       }),
-      frameRate: 10,
+      frameRate: FRAME_RATE,
+      repeat: 0,
+    });
+    this.scene.anims.create({
+      key: "hit",
+      frames: this.scene.anims.generateFrameNumbers("hit_ss", {
+        start: 0,
+        end: 1,
+      }),
+      frameRate: FRAME_RATE,
+      repeat: 0,
+    });
+    this.scene.anims.create({
+      key: "death",
+      frames: this.scene.anims.generateFrameNumbers("death_ss", {
+        start: 0,
+        end: 4,
+      }),
+      frameRate: FRAME_RATE,
       repeat: 0,
     });
   }
@@ -106,19 +155,39 @@ export class Benjamin {
     this.guy.setFlipX(this.isForward);
     this.guy.anims.startAnimation("attack").on("animationcomplete", () => {
       this.isAttacking = false;
+      this.isCharging = false;
+      this.isStartingCharge = false;
     });
   }
 
-  charge(time: number) {
+  startCharge() {
+    this.isStartingCharge = true;
+    this.guy.setFlipX(this.isForward);
+    this.guy.setVelocityX(0);
+    console.log("start charge");
+    this.guy.anims
+      .startAnimation("start_charge")
+      .on("animationcomplete", () => {
+        this.isAttacking = false;
+        this.isStartingCharge = false;
+        this.charge(null);
+      });
+  }
+
+  charge(time: number | null) {
+    this.isCharging = true;
     this.guy.setFlipX(this.isForward);
     this.guy.setVelocityX(0);
     this.guy.anims.play("charge", true);
-    if (this.chargeStart === null || this.isAttacking) {
-      this.chargeStart = time;
-    }
-    const duration = time - this.chargeStart;
-    if (duration >= CHARGE_THRESHOLD && !this.isAttacking) {
-      this.attack();
+    if (time !== null) {
+      if (this.chargeStart === null || this.isAttacking) {
+        this.chargeStart = time;
+      }
+
+      const duration = time - this.chargeStart;
+      if (duration >= CHARGE_THRESHOLD && !this.isAttacking) {
+        this.attack();
+      }
     }
   }
 
