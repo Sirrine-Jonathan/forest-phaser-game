@@ -128,8 +128,8 @@ class Woods extends Phaser.Scene {
 
 const config = {
   type: Phaser.AUTO,
-  width: 600,
-  height: 400,
+  width: 800,
+  height: 450,
   zoom: 1,
   scene: Woods,
   backgroundColor: "#00000",
