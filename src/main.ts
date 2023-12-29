@@ -2,6 +2,16 @@ import Phaser from "phaser";
 import { Rec } from "./rec";
 import "./style.css";
 
+function getRelativePositionToCanvas(
+  gameObject: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody,
+  camera: Phaser.Cameras.Scene2D.Camera
+) {
+  return {
+    x: (gameObject.x - camera.worldView.x) * camera.zoom,
+    y: (gameObject.y - camera.worldView.y) * camera.zoom,
+  };
+}
+
 class Woods extends Phaser.Scene {
   platforms!: Phaser.Physics.Arcade.StaticGroup;
   player = new Rec(this);
@@ -90,10 +100,16 @@ class Woods extends Phaser.Scene {
     }
 
     this.player.create();
-    this.cameras.main.startFollow(this.player.guy, true, 1, 0, 0, 200);
+    this.cameras.main.startFollow(this.player.guy, true, 1, 0, -200, 200);
+    this.cameras.main.setDeadzone(200, 0);
+    this.add.text(0, 0, "Hello World", { font: '"Press Start 2P"' });
   }
 
   update(time: number) {
+    const playerCameraPos = getRelativePositionToCanvas(
+      this.player.guy,
+      this.cameras.main
+    ).x;
     if (this.player.isAttacking || this.player.isStartingCharge) {
       this.player.chargeStart = null;
       return;
@@ -111,14 +127,18 @@ class Woods extends Phaser.Scene {
         }
       } else if (cursors.left.isDown) {
         this.player.moveLeft();
-        this.bg_1.tilePositionX -= 0.05;
-        this.bg_2.tilePositionX -= 0.3;
-        this.bg_3.tilePositionX -= 0.75;
+        if (playerCameraPos <= 101) {
+          this.bg_1.tilePositionX -= 0.05;
+          this.bg_2.tilePositionX -= 0.3;
+          this.bg_3.tilePositionX -= 0.75;
+        }
       } else if (cursors.right.isDown) {
         this.player.moveRight();
-        this.bg_1.tilePositionX += 0.05;
-        this.bg_2.tilePositionX += 0.3;
-        this.bg_3.tilePositionX += 0.75;
+        if (playerCameraPos >= 299) {
+          this.bg_1.tilePositionX += 0.05;
+          this.bg_2.tilePositionX += 0.3;
+          this.bg_3.tilePositionX += 0.75;
+        }
       } else {
         this.player.idle();
       }
