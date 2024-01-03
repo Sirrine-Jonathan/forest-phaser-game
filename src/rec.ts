@@ -55,7 +55,7 @@ export class Rec {
   }
 
   create() {
-    this.guy = this.scene.physics.add.sprite(100, 450, "run_ss");
+    this.guy = this.scene.physics.add.sprite(100, 350, "run_ss");
 
     this.guy.setBounce(0.2);
     this.guy.setCollideWorldBounds(true);
@@ -164,7 +164,6 @@ export class Rec {
     this.isStartingCharge = true;
     this.guy.setFlipX(this.isForward);
     this.guy.setVelocityX(0);
-    console.log("start charge");
     this.guy.anims
       .startAnimation("start_charge")
       .on("animationcomplete", () => {

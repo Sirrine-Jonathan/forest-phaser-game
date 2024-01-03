@@ -2,6 +2,9 @@ import Phaser from "phaser";
 import { Rec } from "./rec";
 import "./style.css";
 
+const WIDTH = 720;
+const HEIGHT = 480;
+
 function getRelativePositionToCanvas(
   gameObject: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody,
   camera: Phaser.Cameras.Scene2D.Camera
@@ -10,6 +13,14 @@ function getRelativePositionToCanvas(
     x: (gameObject.x - camera.worldView.x) * camera.zoom,
     y: (gameObject.y - camera.worldView.y) * camera.zoom,
   };
+}
+
+function shouldBackgroundMove(
+  followedObject: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
+) {
+  return (
+    followedObject.x > 30 + WIDTH / 2 && followedObject.x < 2130 - WIDTH / 2
+  );
 }
 
 class Woods extends Phaser.Scene {
@@ -30,12 +41,24 @@ class Woods extends Phaser.Scene {
     this.load.audio("theme", ["audio/mushgroom_labyrinth.mp3"]);
 
     this.player.preload();
+
+    this.load.tilemapTiledJSON("map", "woods/level_1.json");
   }
 
   create() {
     const music = this.sound.add("theme");
     music.play();
 
+    this.physics.world.setBounds(
+      0,
+      0,
+      WIDTH * 3,
+      HEIGHT,
+      true,
+      true,
+      true,
+      true
+    );
     this.bg_1 = this.add
       .tileSprite(
         0,
@@ -85,31 +108,23 @@ class Woods extends Phaser.Scene {
         this.textures.get("bg_3").getSourceImage().height
     );
 
-    const level = [[14, 16, 16, 16, 16, 17]];
-    const tileMapConfig: Phaser.Types.Tilemaps.TilemapConfig = {
-      data: level,
-      tileWidth: 24,
-      tileHeight: 24,
-      width: 504,
-      height: 360,
-    };
-    const map = this.make.tilemap(tileMapConfig);
-    const tiles = map.addTilesetImage("woods");
-    if (tiles) {
-      // map.createLayer(0, tiles, 0, 0);
-    }
+    const map = this.make.tilemap({ key: "map" });
+    const tileset = map.addTilesetImage("platforms", "woods");
+    const platforms = map.createLayer("dirt", tileset || "", 0, 0);
 
     this.player.create();
-    this.cameras.main.startFollow(this.player.guy, true, 1, 0, -200, 200);
-    this.cameras.main.setDeadzone(200, 0);
-    this.add.text(0, 0, "Hello World", { font: '"Press Start 2P"' });
+    this.cameras.main.startFollow(this.player.guy, true, 1, 0);
+    this.cameras.main.setBounds(0, 0, WIDTH * 3, HEIGHT);
+    this.cameras.main.useBounds = true;
+    // this.cameras.main.setDeadzone(200, 0);
+
+    if (platforms) {
+      platforms.setCollisionByExclusion([-1], true);
+      this.physics.add.collider(platforms, this.player.guy);
+    }
   }
 
   update(time: number) {
-    const playerCameraPos = getRelativePositionToCanvas(
-      this.player.guy,
-      this.cameras.main
-    ).x;
     if (this.player.isAttacking || this.player.isStartingCharge) {
       this.player.chargeStart = null;
       return;
@@ -127,14 +142,14 @@ class Woods extends Phaser.Scene {
         }
       } else if (cursors.left.isDown) {
         this.player.moveLeft();
-        if (playerCameraPos <= 101) {
+        if (shouldBackgroundMove(this.player.guy)) {
           this.bg_1.tilePositionX -= 0.05;
           this.bg_2.tilePositionX -= 0.3;
           this.bg_3.tilePositionX -= 0.75;
         }
       } else if (cursors.right.isDown) {
         this.player.moveRight();
-        if (playerCameraPos >= 299) {
+        if (shouldBackgroundMove(this.player.guy)) {
           this.bg_1.tilePositionX += 0.05;
           this.bg_2.tilePositionX += 0.3;
           this.bg_3.tilePositionX += 0.75;
@@ -148,8 +163,8 @@ class Woods extends Phaser.Scene {
 
 const config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 450,
+  width: WIDTH,
+  height: HEIGHT,
   zoom: 1,
   scene: Woods,
   backgroundColor: "#00000",
