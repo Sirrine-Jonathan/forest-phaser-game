@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { Rec } from "./rec";
+import { Droid } from "./droid";
 import "./style.css";
 
 const WIDTH = 720;
@@ -26,6 +27,7 @@ function shouldBackgroundMove(
 class Woods extends Phaser.Scene {
   platforms!: Phaser.Physics.Arcade.StaticGroup;
   player = new Rec(this);
+  baddies = [new Droid(this)];
   bg_1!: Phaser.GameObjects.TileSprite;
   bg_2!: Phaser.GameObjects.TileSprite;
   bg_3!: Phaser.GameObjects.TileSprite;
@@ -41,6 +43,7 @@ class Woods extends Phaser.Scene {
     this.load.audio("theme", ["audio/mushgroom_labyrinth.mp3"]);
 
     this.player.preload();
+    this.baddies.forEach((droid) => droid.preload());
 
     this.load.tilemapTiledJSON("map", "woods/level_1.json");
   }
@@ -113,6 +116,7 @@ class Woods extends Phaser.Scene {
     const platforms = map.createLayer("dirt", tileset || "", 0, 0);
 
     this.player.create();
+    this.baddies.forEach((droid) => droid.create());
     this.cameras.main.startFollow(this.player.guy, true, 1, 0);
     this.cameras.main.setBounds(0, 0, WIDTH * 3, HEIGHT);
     this.cameras.main.useBounds = true;
@@ -121,10 +125,14 @@ class Woods extends Phaser.Scene {
     if (platforms) {
       platforms.setCollisionByExclusion([-1], true);
       this.physics.add.collider(platforms, this.player.guy);
+      this.baddies.forEach((droid) =>
+        this.physics.add.collider(platforms, droid.robot)
+      );
     }
   }
 
   update(time: number) {
+    // Player movement
     if (this.player.isAttacking || this.player.isStartingCharge) {
       this.player.chargeStart = null;
       return;
@@ -158,6 +166,9 @@ class Woods extends Phaser.Scene {
         this.player.idle();
       }
     }
+
+    // Droid movement
+    this.baddies.forEach((droid) => droid.update(this.player, time));
   }
 }
 

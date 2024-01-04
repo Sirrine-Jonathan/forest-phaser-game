@@ -59,7 +59,7 @@ export class Rec {
 
     this.guy.setBounce(0.2);
     this.guy.setCollideWorldBounds(true);
-    this.guy.setScale(3);
+    this.guy.setScale(2);
     this.guy.setBodySize(20, 30, true);
 
     const FRAME_RATE = 10;
@@ -126,28 +126,6 @@ export class Rec {
       frameRate: FRAME_RATE,
       repeat: 0,
     });
-  }
-
-  update(time: number) {
-    if (this.isAttacking) {
-      this.chargeStart = null;
-      return;
-    }
-    if (this.scene.input.keyboard) {
-      const cursors = this.scene.input.keyboard.createCursorKeys();
-      if (cursors.space.isUp && this.chargeStart !== null) {
-        this.chargeStart = null;
-      }
-      if (cursors.space.isDown) {
-        this.charge(time);
-      } else if (cursors.left.isDown) {
-        this.moveLeft();
-      } else if (cursors.right.isDown) {
-        this.moveRight();
-      } else {
-        this.idle();
-      }
-    }
   }
 
   attack() {
