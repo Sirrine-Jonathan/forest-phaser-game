@@ -6,16 +6,6 @@ import "./style.css";
 const WIDTH = 720;
 const HEIGHT = 480;
 
-function getRelativePositionToCanvas(
-  gameObject: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody,
-  camera: Phaser.Cameras.Scene2D.Camera
-) {
-  return {
-    x: (gameObject.x - camera.worldView.x) * camera.zoom,
-    y: (gameObject.y - camera.worldView.y) * camera.zoom,
-  };
-}
-
 function shouldBackgroundMove(
   followedObject: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 ) {
